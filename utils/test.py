@@ -1,9 +1,11 @@
+
+work_path = "/dss/dsshome1/lxc0B/di29let/ondemand/Projects/Repositories/certainty-estimator"
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import sys
-sys.path.append('../..')
-from MRI_classification.utils.models import UncertaintyResNetPretrained, UncertaintyResNetPretrainedBNnoTrack, UncertaintyResNetPretrainedFCdrop, UncertaintyResNetPretrainedLayer4drop, UncertaintyResNetPretrainedLayer3drop, UncertaintyResNetPretrainedSoftmax
+sys.path.append(work_path)
+from utils.models import UncertaintyResNetPretrained, UncertaintyResNetPretrainedBNnoTrack, UncertaintyResNetPretrainedFCdrop, UncertaintyResNetPretrainedLayer4drop, UncertaintyResNetPretrainedLayer3drop, UncertaintyResNetPretrainedSoftmax
 import numpy as np
 
 def test(net, data, criterion, dropout_p,dev, batch_size=10, printr=False):
