@@ -50,7 +50,7 @@ class MRI_dataset_random(Dataset):
             #image = image.squeeze(3)
             #print(image.size())
         #image = image.to(self.dev)
-        image = image.repeat(3,1,1)
+        #image = image.repeat(3,1,1)
         
         return image, label, idx
     
