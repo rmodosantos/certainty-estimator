@@ -10,6 +10,7 @@
 
 <img src="CNN_architecture.png" alt="CNN architecture" width='1080'/>
 
+
 ## MC dropout-based certainty estimator
 
 **Input**: Sample of dropout predictions from the CNN, as depicted below.
@@ -20,6 +21,7 @@
 
 <img src="Dropout_estimator.png" alt="Dropout estimator" width='1080'/>
 
+
 ## High level features-based certainty estimator
 
 **Input**: High level features from the CNN, taken as the output of the fully connected layer, as depicted below.
@@ -29,3 +31,5 @@
 **Model type**: As explained above, I used a logistic regression classifier to predict wether a CNN prediction is correct, which is a direct estimation of certainty.
 
 <img src="Hfeatures_estimator.png" alt="High level features estimator" width='1080'/>
+
+
