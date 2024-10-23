@@ -31,23 +31,23 @@ class UncertaintyResNetPretrained(nn.Module):
         #self.dropouts = nn.ModuleList([nn.Dropout3d(p=dropout_rate) for _ in range(17)])
         self.dropout = nn.Dropout(p=dropout_rate)
         
-        for name, module in self.base_model.named_modules():
-            if name == '':
-                #print(name)
-                for subname, submodule in module.named_children():
-                    #print(subname)
-                    for subname2, submodule2 in submodule.named_children():
-                        for subname3, submodule3 in submodule2.named_children():
-                            for subname4, submodule4 in submodule3.named_children():
-                                if '1' in subname4 and 'downsample' in subname3:
-                                    setattr(submodule3, subname4,nn.Sequential(submodule4, self.dropout))
+        # for name, module in self.base_model.named_modules():
+        #     if name == '':
+        #         #print(name)
+        #         for subname, submodule in module.named_children():
+        #             #print(subname)
+        #             for subname2, submodule2 in submodule.named_children():
+        #                 for subname3, submodule3 in submodule2.named_children():
+        #                     for subname4, submodule4 in submodule3.named_children():
+        #                         if '1' in subname4 and 'downsample' in subname3:
+        #                             setattr(submodule3, subname4,nn.Sequential(submodule4, self.dropout))
 
         for name, module in self.base_model.named_modules():
             if name == '':
                 for subname, submodule in module.named_children():
                     for subname2, submodule2 in submodule.named_children():
                         for subname3, submodule3 in submodule2.named_children():
-                            if 'relu' in subname3 or 'bn2' in subname3:
+                            if 'relu' in subname3:
                                 setattr(submodule2, subname3,nn.Sequential(submodule3, self.dropout))
                             
         for name, module in self.base_model.named_modules():
