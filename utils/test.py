@@ -19,10 +19,9 @@ def test(net, data, criterion, dropout_p,dev, batch_size=10, printr=False):
                 printr: Whether to show performance results"""
 
     testloader = iter(DataLoader(data,batch_size=batch_size))
-    #net = net.float()
+    
     net.dropout.p = 0
     net.to(dev)
-    #net.eval()
     
     correct = 0
     total = 0
@@ -33,7 +32,8 @@ def test(net, data, criterion, dropout_p,dev, batch_size=10, printr=False):
         for _ in range(10):
             
             image,label = next(testloader)
-            #compute predictions from the class with max output
+            
+            # Compute predictions from the class with max output
             outputs=net(image).cpu()
             prediction = np.argmax(outputs,axis=1)
             print(prediction)
@@ -45,7 +45,6 @@ def test(net, data, criterion, dropout_p,dev, batch_size=10, printr=False):
             loss = criterion(outputs,label.cpu()).item()
             losses.append(loss)
     
-    #print(total)
     #compute confusion matrix
     cm = confusion_matrix(labels[0],predicted[0])
     
@@ -59,6 +58,20 @@ def test(net, data, criterion, dropout_p,dev, batch_size=10, printr=False):
 
 
 def SaveCheckpoint(path,bsize,lr,beta1,beta2,epocs):
+    """Save model checkpoint with training parameters.
+
+    Args:
+        path (str): Path where to save the checkpoint
+        batch_size (int): Size of training batches
+        learning_rate (float): Learning rate used in training
+        beta1 (float): Beta1 parameter for optimizer
+        beta2 (float): Beta2 parameter for optimizer
+        epochs (int): Number of training epochs
+
+    Returns:
+        None
+    """
+    
     torch.save({
         'model_state_dict': net.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
@@ -70,19 +83,37 @@ def SaveCheckpoint(path,bsize,lr,beta1,beta2,epocs):
     },path)
     
 
-def load_model(path,dev, dropout_rate):
+def load_model(path,dev,dropout_rate):
+    """
+    Load a pre-trained model along with its learning parameters.
+
+    Args:
+        path (str): The file path to the saved model checkpoint.
+        dev (str): Device where to store the tensors.
+        dropout_rate (float): The dropout rate to use in the model.
+
+    Returns:
+        net (torch.nn.Module): The loaded neural network model.
+        learning_params (dict): A dictionary containing the model's learning parameters such as:
+            - learning_rate (float)
+            - batch_size (int)
+            - beta1 (float)
+            - beta2 (float)
+            - epochs (int)
+    """
+    
+    # Load the saved model checkpoint from the specified path
     model_dict = torch.load(path,map_location=dev)
-#     model_dict['model_state_dict'] = {k.replace('base_model.',''):v
-#                                    for k,v in model_dict['model_state_dict'].items()}
+    
+    # Extract the model state dictionary
     state_dict = model_dict['model_state_dict']
     
-    #print(state_dict.keys())
-    #net = resnet18(spatial_dims=2, n_input_channels=1, num_classes=3)
-    #net = resnet18()
-    #net.fc = torch.nn.Linear(in_features=net.fc.in_features,out_features=3)
+    # Initialize the model architecture with the specified dropout rate
     net = UncertaintyResNetPretrained(num_classes=3,dropout_rate=dropout_rate,pretrained_weights=True)
     net.load_state_dict(state_dict,strict=False)
     net.to(dev)
+    
+    # Extract and return learning parameters
     learning_params = {key: model_dict[key] for key in ['learning_rate','batch_size','beta1','beta2','epochs']}
     
     return net, learning_params
@@ -182,14 +213,35 @@ estimator_type = ['dropout','hfeatures']
 
 
 def train_estimators(drop_names,C=[1,1], dropout_predictions=False,features_file = 'uncertainty_all.pth',clf=None):
+    """
+    Train uncertainty estimators (logistic classifiers) on extracted features for different dropout rates.
+
+    This function loads the feature representations from previously saved models, and uses them to 
+    train logistic regression models to predict whether the model's classification is correct or not 
+    (based on 'wrong' labels). The trained classifiers are stored in a dictionary for later use.
+
+    Args:
+        drop_names (str): dropout names matching name patterns of saved files.
+        C (list of float, optional): Regularization strengths for the logistic regression classifiers 
+                                     for each estimator type. Default is [1, 1].
+        dropout_predictions (bool, optional): If True, train using dropout-based predictions. 
+                                              If False, train on hidden features ('hfeatures'). Default is False.
+        features_file (str, optional): Filename of the .pth file containing features and wrong labels. 
+                                       Default is 'uncertainty_all.pth'.
+        clf (dict, optional): Pre-trained classifiers for each dropout rate and estimator type. 
+                              If None, new classifiers will be trained. Default is None.
+
+    Returns:
+        dict: A dictionary containing trained classifiers for each dropout rate and estimator type.
+    """
+    
+    # Initialize dictionary to store uncertainty estimators
     uncertainty_drops = {}
-    
-    
     for type in estimator_type:
         uncertainty_drops[type] = {key: {} for key in drop_names}
     
     for drop_name in drop_names:
-        
+        # Load the features and wrong labels from the saved file
         model_path = f"/dss/dssfs02/lwp-dss-0001/pr84qa/pr84qa-dss-0000/ricardo/data/Projects/MRI_classification/models/resnet18/pretrained/dropout_allconvs/dp_rate_{drop_name}_nonorm_masked_extendedtrain06/29_05_2024"     
         uncertainty_tm = torch.load(os.path.join(model_path,features_file))
         
@@ -202,120 +254,119 @@ def train_estimators(drop_names,C=[1,1], dropout_predictions=False,features_file
                 for data_name in ['features','wrong']:
                     uncertainty_drops[type][drop_name][key][data_name] = uncertainty_tm[key][data_name][type]
             
-            #fit logistic model
             if dropout_predictions:
                 pred_type = 'dropout'
             else:
                 pred_type = type
-                
-            fts = uncertainty_drops[type][drop_name]['train']['features']
+
+            # Prepare the training features and labels for the logistic regression model
+            fts = uncertainty_drops[type][drop_name]['train']['features']        
             wrong = uncertainty_drops[pred_type][drop_name]['train']['wrong']
+            
+            # Reshape the features and remove any NaN values
             Xtrain = fts.view(-1,fts.size(2))
             gind = torch.where(torch.isnan(Xtrain[:,1])==0)[0]
             Xtrain = Xtrain[gind,:]
             wrong_train = wrong.view(-1,1)[gind,:]
+
+            # Create binary labels
             y = torch.where(wrong_train==0,1,0).squeeze()
 
-            #fit classifier
+            # Train the logistic regression classifier
             if not clf:
+                # Train a new logistic regression model
                 uncertainty_drops[type][drop_name]['clf'] = LogisticRegression(C=C[i],random_state=0,max_iter=3000).fit(Xtrain, y)
             else:
+                # Use the provided pre-trained classifier
                 uncertainty_drops[type][drop_name]['clf'] = clf[type][drop_name]['clf']
     
     return uncertainty_drops
+    
 
 def get_estimator_accuracy(uncertainty_drops,drop_names,dataset='validation',estimator_mix=False,masking_levels=None):
+    """
+    Computes and updates the accuracy and confidence statistics for different uncertainty estimators.
 
+    This function calculates accuracy, confidence (certainty), and various metrics across a range of certainty 
+    estimators (dropout or hfeatures). It computes accuracy metrics for the entire dataset as well as for different 
+    masking levels.
+
+    Args:
+        uncertainty_drops (dict): A dictionary containing trained certainty estimators, their predictions,
+                                  and 'wrong' labels (whether the prediction was wrong).
+        drop_names (list of str): List of dropout rates (as strings) to evaluate.
+        dataset (str, optional): The dataset to compute accuracy for, either 'train' or 'validation'. 
+                                 Default is 'validation'.
+        estimator_mix (bool, optional): If True, combines different estimators; if False, uses individual estimators.
+                                        Default is False.
+        masking_levels (list, optional): List of masking levels, used if estimator_mix is True. Default is None.
+
+    Returns:
+        dict: Updated `uncertainty_drops` dictionary with computed accuracy and confidence statistics.
+    """
+    
+    # Define histogram bins for confidence (certainty) values
     hbins = np.arange(0.3,1.02,0.02)
     uncertainty_drops['model confidence'] = hbins[:-1]+0.01
     
     
     for type in estimator_type:
         for drop_name in drop_names:
-            
+            # Extract validation features and wrong predictions
             fts_val = uncertainty_drops[type][drop_name][dataset]['features']
             wrong_val = uncertainty_drops[type][drop_name][dataset]['wrong']
             X = fts_val.view(-1,fts_val.size(2))
 
-            # Histograms of estimator output probability of a sample being correct
-            # All predictions
+            # Compute the predicted probabilities of correct classifications (certainty)
             if estimator_mix:
                 pred_proba = uncertainty_drops[type][drop_name]['clf'].predict_proba(fts_val).reshape(-1,1)
             else:
-                
                 pred_proba = uncertainty_drops[type][drop_name]['clf'].predict_proba(X)[:,1]
                 
+            # Create histograms for all predictions
             b = np.histogram(pred_proba,bins=hbins)
             
-            # Wrong predictions 
+            # Create histograms for wrong predictions
             c = np.histogram(pred_proba[wrong_val.view(-1,1).squeeze()==1],bins=hbins)
             
-            #get global nan indices
+            # Identify bins where we don't have NaN values (to avoid dividing by zero)
             with np.errstate(divide='ignore', invalid='ignore'):
                 ind_nan = ~np.isnan(1-c[0]/b[0])
                 uncertainty_drops[type][drop_name]['global_nan_bin'] = ind_nan
                
-            #store stats in dictionary
+            # Store overall accuracy and confidence
             uncertainty_drops[type][drop_name]['acc_total'] = 1-c[0]/b[0]
             uncertainty_drops[type][drop_name]['conf_total'] = b[0]
             uncertainty_drops[type][drop_name]['accuracy'] = 1 - torch.sum(wrong_val.view(-1,1))/wrong_val.view(-1,1).size(0)
 
-            # The same for each masking extent
+            # Initialize lists to store per-mask accuracy and confidence
             predm = []
             pred_acc = []
             uncertainty_drops[type][drop_name]['nan_bin'] = []
-
+            
+            # Compute accuracy and certainty for each masking level
             for ind in range(fts_val.size(0)):
                 if estimator_mix:
                     pred_proba = uncertainty_drops[type][drop_name]['clf'].predict_proba(fts_val[ind,:,:].squeeze(),
                                                                                          mask_levels=masking_levels[ind]).reshape(-1,1)
                 else:
                     pred_proba = uncertainty_drops[type][drop_name]['clf'].predict_proba(fts_val[ind,:,:].squeeze())[:,1]
-                    
+                
+                # Compute per-mask histograms
                 bm,_ = np.histogram(pred_proba,bins=hbins)
                 cm,_ = np.histogram(pred_proba[wrong_val[ind,:]==1],bins=hbins)
-
+                
+                # Calculate per-mask accuracy and certainty
                 with np.errstate(divide='ignore', invalid='ignore'):
                     pred_acc.append(1-cm/bm)
                     predm.append(bm/np.max(bm))
                     ind_nan = ~np.isnan(1-cm/bm)
                     uncertainty_drops[type][drop_name]['nan_bin'].append(ind_nan)
-
+            
+            # Store per-mask accuracy and confidence
             uncertainty_drops[type][drop_name]['acc_bin'] = np.array(pred_acc)
             uncertainty_drops[type][drop_name]['conf_bin'] = np.array(predm)
             uncertainty_drops[type][drop_name]['nan_bin'] = np.array(uncertainty_drops[type][drop_name]['nan_bin'])
     
     return uncertainty_drops
 
-
-def get_estimator_stats(uncertainty_drops,corruption_levels,drop_names):
-    
-    stat_names = ['accuracy','hconf']
-    stats = {}
-    for type in estimator_type:
-        stats[type] = {key:{} for key in ['total', 'binned']}
-        for key in stats[type]:
-            stats[type][key] = {k:[] for k in stat_names}
-
-    for type in estimator_type:
-        for drop_name in drop_names:
-            #total
-            ind_nan = uncertainty_drops[type][drop_name]['global_nan_bin']
-            xp = uncertainty_drops['model confidence'].reshape(-1,1)[ind_nan]
-            yp = uncertainty_drops[type][drop_name]['acc_total'][ind_nan]
-            stats[type]['total']['accuracy'].append(uncertainty_drops[type][drop_name]['accuracy'])
-
-            #binned
-            h_conf = []
-            
-            for i in range(corruption_levels.shape[0]):
-                ind_nan = uncertainty_drops[type][drop_name]['nan_bin'][i,:]
-                yp = uncertainty_drops[type][drop_name]['acc_bin'][i,ind_nan]
-                xp = uncertainty_drops['model confidence'][ind_nan].reshape(-1,1)
-                h_conf.append(np.mean(yp[xp[:,0]>0.9]))
-
-            stats[type]['binned']['hconf'].append(h_conf)
-
-        stats[type]['binned']['hconf'] = np.array(stats[type]['binned']['hconf']).squeeze()
-    
-    return stats

@@ -25,54 +25,36 @@ class UncertaintyResNetPretrained(nn.Module):
         self.base_model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=2, bias=False)
         self.base_model.conv1.weight = nn.Parameter(torch.mean(w, dim=1, keepdim=True))
         
-        #net = net.to(dev)
-        
         # Adding dropout layers inside residual blocks
-        #self.dropouts = nn.ModuleList([nn.Dropout3d(p=dropout_rate) for _ in range(17)])
         self.dropout = nn.Dropout(p=dropout_rate)
         
-        # for name, module in self.base_model.named_modules():
-        #     if name == '':
-        #         #print(name)
-        #         for subname, submodule in module.named_children():
-        #             #print(subname)
-        #             for subname2, submodule2 in submodule.named_children():
-        #                 for subname3, submodule3 in submodule2.named_children():
-        #                     for subname4, submodule4 in submodule3.named_children():
-        #                         if '1' in subname4 and 'downsample' in subname3:
-        #                             setattr(submodule3, subname4,nn.Sequential(submodule4, self.dropout))
+        for name, module in self.base_model.named_modules():
+            if name == '':
+                #print(name)
+                for subname, submodule in module.named_children():
+                    #print(subname)
+                    for subname2, submodule2 in submodule.named_children():
+                        for subname3, submodule3 in submodule2.named_children():
+                            for subname4, submodule4 in submodule3.named_children():
+                                if '1' in subname4 and 'downsample' in subname3:
+                                    setattr(submodule3, subname4,nn.Sequential(submodule4, self.dropout))
 
         for name, module in self.base_model.named_modules():
             if name == '':
                 for subname, submodule in module.named_children():
                     for subname2, submodule2 in submodule.named_children():
                         for subname3, submodule3 in submodule2.named_children():
-                            if 'relu' in subname3:
+                            if 'relu' in subname3 or 'bn2' in subname3:
                                 setattr(submodule2, subname3,nn.Sequential(submodule3, self.dropout))
                             
         for name, module in self.base_model.named_modules():
-            #print(f"name -{name}-")
             if name == '':
                 for subname, submodule in module.named_children():
                     #print(f" subname: {subname}")
                     if 'relu' in subname:
                         setattr(module, subname,nn.Sequential(submodule, self.dropout))
 
-#         # List of modules to modify
-#         modules_to_modify = []
-        
-#         # Add dropout after the ReLU layers
-#         for name, module in self.base_model.named_modules():
-#             if 'relu' in name or 'bn2' in name or 'downsample.1' in name:
-#                 modules_to_modify.append((name, module))
 
-# #         # Perform modifications outside the loop
-#         for name, module in modules_to_modify:
-#             setattr(self.base_model, name, nn.Sequential(module, self.dropout))
-        
-        #self.n_samples = n_samples
-        #print(self.base_model.named_modules())
-        
     def forward(self, x):
         x = self.base_model(x)
         return x

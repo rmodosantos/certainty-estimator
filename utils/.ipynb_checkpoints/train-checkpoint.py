@@ -36,8 +36,6 @@ def trainNet(net, data_train, optimizer,criterion, batch_size=4, epochs=4, print
     epoch_start = 0
     rloss = []
     
-    
-    # Go over 1000 training instances (1 epoch) multiple times
     for epoch in range(epochs):  
 
         epoch_start += 1
@@ -45,20 +43,15 @@ def trainNet(net, data_train, optimizer,criterion, batch_size=4, epochs=4, print
 
         for i, (image,target) in enumerate(loader):
 
-            
             # Zero the parameter gradients
             optimizer.zero_grad()
             
-            #print(image.size())
             # Compute network output
             outputs=net(image)
             
-            #print('target',target)
-            #print('output',outputs)
             # Calculate loss
             loss = criterion(outputs, target)
            
-        
             #update weights based on backpropagation
             loss.backward()
             
