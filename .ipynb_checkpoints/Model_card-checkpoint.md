@@ -6,7 +6,7 @@
 
 **Output**: The type of tumor present in the input image, from 3 possible classes: Meningioma, Glioma or Pituitary tumor. 
 
-**Model architecture**: I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. This choice was motivasted by the previously demonstrated success of ResNet architectures in image classification tasks (REF). The moderate depth of the network (18 layers) provided a good compromise between classification performance and computational resources. To enable Monte Carlo dropout for certainty estimation I added dropout layers downstream of every activation layer, as depicted below.
+**Model architecture**: I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. This choice was motivasted by the previously demonstrated success of ResNet architectures in image classification tasks (REF). The moderate depth of the network (18 layers) provided a good compromise between classification performance and computational resources. To enable Monte Carlo dropout for certainty estimation I added dropout layers downstream of every activation layer, as depicted below. 
 
 <img src="CNN_architecture.png" alt="CNN architecture" width='1080'/>
 
