@@ -19,7 +19,7 @@ Although several methods have been proposed to deal with this issue (REFs), thei
 
 ## Model implementation at a glance
 
-I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card) and [data sheet](/data_sheet), repectively.
+I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), repectively.
 
 
 ### Monte Carlo dropout-based certainty estimation
@@ -33,7 +33,7 @@ Certainty, can then, in principle, be extracted from metrics derived from the MC
 ### High level features-based certainty estimation
 Instead of the MC dropout output, which requires many forward passes through the CNN, an alternative method has been proposed to calibrate the softmax output of a CNN, such that it better reflects certainty. It takes the high-level features derived for each image as input to train a detector of misclassified samples (REF). Here, I implemented a modified version of this strategy by using the output of the fully connected layer (high-level features) to train a logistic regression model directly on the estimation of prediction certainty, as depicted below.
 
-<img src="Dropout_estimator.png" alt="Dropout estimator" width='1080'/>
+<img src="Hfeatures_estimator.png" alt="Dropout estimator" width='1080'/>
 
 
 ## Main outcomes
