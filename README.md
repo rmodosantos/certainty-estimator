@@ -17,6 +17,23 @@ Thus, incorporating uncertainty estimation into neural networks is crucial for r
 Although several methods have been proposed to deal with this issue, their implementation is typically not straightforward, or not reliable enough [1,2]. In this project I demonstrate a simple and effective way to implement certainty estimation on the predictions of a neural network which can be incorporated in any architecture.
 
 
+## Repository structure
+
+In this repository, I first train a neral network to classify tumors in a publicly available dataset. Then, I train and test certainty estimation approaches and finalize by showing a proof of concept for the application of certainty estimation in a real-world scenario. Detailed information on model implementations and on the dataset are incorporated in dedicated files and all steps are documented in jupyter notebooks, as follows:
+
+Information on models and dataset:
+- [model card](/Model_card.md)
+- [data sheet](/data_sheet.md)
+
+Ordered description of model training and testing/application:
+- [Training CNN](/notebooks/Training.ipynb)
+- [Training and testing certainty estimators](/notebooks/2_Certainty_estimators.ipynb)
+- [Certainty estimator for active sampling applications](/notebooks/3_Certainty_active_sampling.ipynb)
+- [Application of certainty estimation in undersampling](/notebooks/4_Undersampling.ipynb)
+
+Notebook-specific code is kept within the respective notebook, whereas functions or classes shared across notebooks are defined in python scripts in the folder [utils](/utils/).
+
+
 ## Model implementation at a glance
 
 I picked a commonly used CNN architecture, the ResNet18 [3], to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), repectively.
