@@ -14,34 +14,42 @@ Thus, incorporating uncertainty estimation into neural networks is crucial for r
 <img src="Uncertainty_DALLE3.png" alt="Show uncertainty" width="1080" />
 
 
-Although several methods have been proposed to deal with this issue (REFs), their implementation is typically not straightforward, or not reliable enough. In this project I demonstrate a simple and effective way to implement certainty estimation on the predictions of a neural network which can be incorporated in any architecture.
+Although several methods have been proposed to deal with this issue, their implementation is typically not straightforward, or not reliable enough [1,2]. In this project I demonstrate a simple and effective way to implement certainty estimation on the predictions of a neural network which can be incorporated in any architecture.
 
 
 ## Model implementation at a glance
 
-I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), repectively.
+I picked a commonly used CNN architecture, the ResNet18 [3], to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), repectively.
 
 
 ### Monte Carlo dropout-based certainty estimation
-Monte Carlo (MC) dropout has been proposed as a method to estimate neural network model prediction uncertainty. In this approach, dropout used during training is kept on during inference, enabling the sampling of multiple slightly different CNN outputs. The end-result is a distribution of CNN outputs for each class, insted of the typical deterministic CNN output consisting of a single value per class. 
+Monte Carlo (MC) dropout has been proposed as a method to estimate neural network model prediction uncertainty [4]. In this approach, dropout used during training is kept on during inference, enabling the sampling of multiple slightly different CNN outputs. The end-result is a distribution of CNN outputs for each class, insted of the typical deterministic CNN output consisting of a single value per class. 
 
-Certainty, can then, in principle, be extracted from metrics derived from the MC dropout samples, such as its standard deviation (REF). However, it is often not straightforward to derive the most informative of such metrics and translate it into a certainty value. To circunvent this problem, I trained a logistic regression model to predict whether the CNN prediction is correct, having the MC dropoout samples as input, as shematized below. Remarkably, the output of the logistic regression estimator can be given as a probability, corresponding to an estimation of the CNN prediction certainty. 
+Certainty, can then, in principle, be extracted from metrics derived from the MC dropout samples, such as its standard deviation [4]. However, it is often not straightforward to derive the most informative of such metrics and translate it into a certainty value. To circunvent this problem, I trained a logistic regression model to predict whether the CNN prediction is correct, having the MC dropoout samples as input, as shematized below. Remarkably, the output of the logistic regression estimator can be given as a probability, corresponding to an estimation of the CNN prediction certainty. 
 
 <img src="Dropout_estimator.png" alt="Dropout estimator" width='1080'/>
 
 
 ### High level features-based certainty estimation
-Instead of the MC dropout output, which requires many forward passes through the CNN, an alternative method has been proposed to calibrate the softmax output of a CNN, such that it better reflects certainty. It takes the high-level features derived for each image as input to train a detector of misclassified samples (REF). Here, I implemented a modified version of this strategy by using the output of the fully connected layer (high-level features) to train a logistic regression model directly on the estimation of prediction certainty, as depicted below.
+Instead of the MC dropout output, which requires many forward passes through the CNN, an alternative method has been proposed to calibrate the softmax output of a CNN, such that it better reflects certainty. It takes the distance between high-level features derived for each image as input to train a detector that lowers the confidence output of pontentially misclassified samples [5]. Here, I implemented a modified version of this strategy by using the output of the fully connected layer (high-level features) to train a logistic regression model directly on the estimation of prediction certainty, as depicted below.
 
 <img src="Hfeatures_estimator.png" alt="Dropout estimator" width='1080'/>
 
 
 ## Main outcomes
-The results that both methods can provide a decent estimate of CNN prediction certainty, but MC dropout-estimators are overall better than high level features-estimators, which tend to overfit on the trainining data. My tests show that certainty estimation is robust over a wide range of image corruption levels. Extreme corruption, that significantly decreases CNN accuracy, leads to disruption of certainty estimation. Given its easy and effective implementation, this approach holds potential to complement AI model pipelines in real-world scenarios, providing a simple way to extract prediction certainty. Check the results [here](/notebooks/Certainty_estimators.ipynb).
+The results that both methods can provide a decent estimate of CNN prediction certainty, but MC dropout-estimators are overall better than high level features-estimators, which tend to overfit on the trainining data. My tests show that certainty estimation is robust over a wide range of image corruption levels. However, extreme corruption, that significantly decreases CNN accuracy, leads to disruption of certainty estimation. 
+
+Given its easy and effective implementation, this approach holds potential to complement AI model pipelines in real-world scenarios, providing a simple way to extract prediction certainty. Check the results [here](/notebooks/Certainty_estimators.ipynb).
 
 ### Real-world application on the acceleration of MRI image-based diagnostics
 As a proof of concept, I simulated a real-world application of certainty estimation to accelerate MRI image-based diagnostics through undersampling(please check it [here](/notebooks/Undersampling.ipynb). The goal was to classify MRI images accurately while minimizing the number of acquired pixels, addressing the time-intensive nature of traditional full-scan MRI. By stopping the image acquisition process once classification certainty reaches a predefined threshold, I demonstrate that the trade-off between data acquisition and classification accuracy can be significantly improved, leading to faster diagnostics.
 
 The results underscore the benefits of integrating certainty estimation into AI model pipelines, showcasing its potential to enhance high-throughput, AI-powered MRI diagnostics. This approach is particularly relevant to emerging applications in industries such as agriculture and poultry, where MRI-based imaging is beginning to play a role.
 
+## Literature
 
+1 - [A survey of uncertainty in deep neural networks](https://link.springer.com/article/10.1007/s10462-023-10562-9)
+2 - [On Getting Confidence Estimates from Neural Networks](https://bharathpbhat.github.io/2021/04/04/getting-confidence-estimates-from-neural-networks.html)
+3 - [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
+4 - [Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](https://arxiv.org/abs/1506.02142)
+5 - [Predicting neural network confidence using high-level feature distance](https://www.sciencedirect.com/science/article/abs/pii/S095058492300068X)
