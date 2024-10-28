@@ -6,7 +6,7 @@
 
 **Output**: The type of tumor present in the input image, from 3 possible classes: Meningioma, Glioma or Pituitary tumor. 
 
-**Model architecture**: I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. This choice was motivasted by the previously demonstrated success of ResNet architectures in image classification tasks (REF). The moderate depth of the network (18 layers) provided a good compromise between classification performance and computational resources. To enable Monte Carlo dropout for certainty estimation I added dropout layers downstream of every activation layer, as depicted below. 
+**Model architecture**: I picked a commonly used CNN architecture, the ResNet18, to classify different types of brain tumors in MRI images. This choice was motivated by the previously demonstrated success of ResNet architectures in image classification tasks in general and specifically in the one used in this repository [1,2]. The moderate depth of the network (18 layers) provided a good compromise between classification performance and computational resources. To enable Monte Carlo dropout for certainty estimation I added dropout layers downstream of every convolution and activation layer, as depicted below. 
 
 <img src="CNN_architecture.png" alt="CNN architecture" width='1080'/>
 
@@ -33,3 +33,8 @@
 <img src="Hfeatures_estimator.png" alt="High level features estimator" width='1080'/>
 
 
+## Literature
+
+1 - [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
+
+2 - [Multi-class brain tumor classification using residual network and global average pooling](https://link.springer.com/article/10.1007/s11042-020-10335-4)

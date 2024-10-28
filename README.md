@@ -39,17 +39,26 @@ Instead of the MC dropout output, which requires many forward passes through the
 ## Main outcomes
 The results that both methods can provide a decent estimate of CNN prediction certainty, but MC dropout-estimators are overall better than high level features-estimators, which tend to overfit on the trainining data. My tests show that certainty estimation is robust over a wide range of image corruption levels. However, extreme corruption, that significantly decreases CNN accuracy, leads to disruption of certainty estimation. 
 
+<img src="main_result_certainty.png" alt="Certainty estimation" width='1080'/>
+
 Given its easy and effective implementation, this approach holds potential to complement AI model pipelines in real-world scenarios, providing a simple way to extract prediction certainty. Check the results [here](/notebooks/Certainty_estimators.ipynb).
 
 ### Real-world application on the acceleration of MRI image-based diagnostics
 As a proof of concept, I simulated a real-world application of certainty estimation to accelerate MRI image-based diagnostics through undersampling(please check it [here](/notebooks/Undersampling.ipynb). The goal was to classify MRI images accurately while minimizing the number of acquired pixels, addressing the time-intensive nature of traditional full-scan MRI. By stopping the image acquisition process once classification certainty reaches a predefined threshold, I demonstrate that the trade-off between data acquisition and classification accuracy can be significantly improved, leading to faster diagnostics.
 
+<img src="main_result_undersampling.png" alt="Undersampling" width='1080'/>
+
 The results underscore the benefits of integrating certainty estimation into AI model pipelines, showcasing its potential to enhance high-throughput, AI-powered MRI diagnostics. This approach is particularly relevant to emerging applications in industries such as agriculture and poultry, where MRI-based imaging is beginning to play a role.
+
 
 ## Literature
 
 1 - [A survey of uncertainty in deep neural networks](https://link.springer.com/article/10.1007/s10462-023-10562-9)
+
 2 - [On Getting Confidence Estimates from Neural Networks](https://bharathpbhat.github.io/2021/04/04/getting-confidence-estimates-from-neural-networks.html)
+
 3 - [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
+
 4 - [Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](https://arxiv.org/abs/1506.02142)
+
 5 - [Predicting neural network confidence using high-level feature distance](https://www.sciencedirect.com/science/article/abs/pii/S095058492300068X)

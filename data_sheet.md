@@ -1,7 +1,7 @@
 # Datasheet
 
 ## Motivation
-The dataset was created with the main goal of contributing to the development and testing of new machine learning algorithms for MRI image classification. The choice of this dataset in the context of the current project was motivated by the previously demonstrated high accuracy of commonly used convolutional neural networks, such as Resnets, in tumor classification tasks using this dataset (REF).
+The dataset was created with the main goal of contributing to the development and testing of new machine learning algorithms for MRI image classification. The choice of this dataset in the context of the current project was motivated by the previously demonstrated high accuracy of commonly used convolutional neural networks, such as Resnets, in tumor classification tasks using this dataset [1].
 
 ## Composition
 The dataset is composed of 3064 T1-weighted contrast-inhanced images from 233 patients with three kinds of brain tumor: meningioma (708 slices), glioma (1426 slices), and pituitary tumor (930 slices). The dataset is publicly available at: https://figshare.com/articles/dataset/brain_tumor_dataset/1512427?file=7953679
@@ -22,3 +22,8 @@ This datased is intended to be used for developing and testing new machine learn
 
 ## Distribution
 No copyright restrictions. Please check the dataset link for further details or updates.
+
+
+## Literature
+
+1 - [Multi-class brain tumor classification using residual network and global average pooling](https://link.springer.com/article/10.1007/s11042-020-10335-4)
