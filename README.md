@@ -54,7 +54,7 @@ Instead of the MC dropout output, which requires many forward passes through the
 
 
 ## Main outcomes
-The results that both methods can provide a decent estimate of CNN prediction certainty, but MC dropout-estimators are overall better than high level features-estimators, which tend to overfit on the trainining data. My tests show that certainty estimation is robust over a wide range of image corruption levels. However, extreme corruption, that significantly decreases CNN accuracy, leads to disruption of certainty estimation. 
+The results show that both methods can provide a decent estimate of CNN prediction certainty, but MC dropout-estimators are overall better than high level features-estimators, which tend to overfit on the training data. My tests show that certainty estimation is robust over a wide range of image corruption levels. However, extreme corruption, that significantly decreases CNN accuracy, leads to disruption of certainty estimation. 
 
 <img src="main_result_certainty.png" alt="Certainty estimation" width='1080'/>
 
