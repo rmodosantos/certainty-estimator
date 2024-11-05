@@ -26,7 +26,7 @@ Information on models and dataset:
 - [data sheet](/data_sheet.md)
 
 Ordered description of model training and testing/application:
-- [Training CNN](/notebooks/Training.ipynb)
+- [Training CNN](/notebooks/1_Training.ipynb)
 - [Training and testing certainty estimators](/notebooks/2_Certainty_estimators.ipynb)
 - [Certainty estimator for active sampling applications](/notebooks/3_Certainty_active_sampling.ipynb)
 - [Application of certainty estimation in undersampling](/notebooks/4_Undersampling.ipynb)
@@ -36,19 +36,19 @@ Notebook-specific code is kept within the respective notebook, whereas functions
 
 ## Model implementation at a glance
 
-I picked a commonly used CNN architecture, the ResNet18 [3], to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), repectively.
+I picked a commonly used CNN architecture, the ResNet18 [3], to classify different types of brain tumors in MRI images. Training was performed using dropout in all layers, which served mainly as a basis for certainty estimation during inference. For more detailed information on the model and dataset please check the [model card](/Model_card.md) and [data sheet](/data_sheet.md), respectively.
 
 
 ### Monte Carlo dropout-based certainty estimation
-Monte Carlo (MC) dropout has been proposed as a method to estimate neural network model prediction uncertainty [4]. In this approach, dropout used during training is kept on during inference, enabling the sampling of multiple slightly different CNN outputs. The end-result is a distribution of CNN outputs for each class, insted of the typical deterministic CNN output consisting of a single value per class. 
+Monte Carlo (MC) dropout has been proposed as a method to estimate neural network model prediction uncertainty [4]. In this approach, dropout used during training is kept on during inference, enabling the sampling of multiple slightly different CNN outputs. The end-result is a distribution of CNN outputs for each class, instead of the typical deterministic CNN output consisting of a single value per class. 
 
-Certainty, can then, in principle, be extracted from metrics derived from the MC dropout samples, such as its standard deviation [4]. However, it is often not straightforward to derive the most informative of such metrics and translate it into a certainty value. To circunvent this problem, I trained a logistic regression model to predict whether the CNN prediction is correct, having the MC dropoout samples as input, as shematized below. Remarkably, the output of the logistic regression estimator can be given as a probability, corresponding to an estimation of the CNN prediction certainty. 
+Certainty, can then, in principle, be extracted from metrics derived from the MC dropout samples, such as its standard deviation [4]. However, it is often not straightforward to derive the most informative of such metrics and translate it into a certainty value. To circumvent this problem, I trained a logistic regression model to predict whether the CNN prediction is correct, having the MC dropout samples as input, as schematized below. Remarkably, the output of the logistic regression estimator can be given as a probability, corresponding to an estimation of the CNN prediction certainty. 
 
 <img src="Dropout_estimator.png" alt="Dropout estimator" width='1080'/>
 
 
 ### High level features-based certainty estimation
-Instead of the MC dropout output, which requires many forward passes through the CNN, an alternative method has been proposed to calibrate the softmax output of a CNN, such that it better reflects certainty. It takes the distance between high-level features derived for each image as input to train a detector that lowers the confidence output of pontentially misclassified samples [5]. Here, I implemented a modified version of this strategy by using the output of the fully connected layer (high-level features) to train a logistic regression model directly on the estimation of prediction certainty, as depicted below.
+Instead of the MC dropout output, which requires many forward passes through the CNN, an alternative method has been proposed to calibrate the softmax output of a CNN, such that it better reflects certainty. It takes the distance between high-level features derived for each image as input to train a detector that lowers the confidence output of potentially misclassified samples [5]. Here, I implemented a modified version of this strategy by using the output of the fully connected layer (high-level features) to train a logistic regression model directly on the estimation of prediction certainty, as depicted below.
 
 <img src="Hfeatures_estimator.png" alt="Dropout estimator" width='1080'/>
 
@@ -58,10 +58,10 @@ The results show that both methods can provide a decent estimate of CNN predicti
 
 <img src="main_result_certainty.png" alt="Certainty estimation" width='1080'/>
 
-Given its easy and effective implementation, this approach holds potential to complement AI model pipelines in real-world scenarios, providing a simple way to extract prediction certainty. Check the results [here](/notebooks/Certainty_estimators.ipynb).
+Given its easy and effective implementation, this approach holds potential to complement AI model pipelines in real-world scenarios, providing a simple way to extract prediction certainty. Check the results [here](/notebooks/2_Certainty_estimators.ipynb).
 
 ### Real-world application on the acceleration of MRI image-based diagnostics
-As a proof of concept, I simulated a real-world application of certainty estimation to accelerate MRI image-based diagnostics through undersampling(please check it [here](/notebooks/Undersampling.ipynb). The goal was to classify MRI images accurately while minimizing the number of acquired pixels, addressing the time-intensive nature of traditional full-scan MRI. By stopping the image acquisition process once classification certainty reaches a predefined threshold, I demonstrate that the trade-off between data acquisition and classification accuracy can be significantly improved, leading to faster diagnostics.
+As a proof of concept, I simulated a real-world application of certainty estimation to accelerate MRI image-based diagnostics through undersampling(please check it [here](/notebooks/4_Undersampling.ipynb). The goal was to classify MRI images accurately while minimizing the number of acquired pixels, addressing the time-intensive nature of traditional full-scan MRI. By stopping the image acquisition process once classification certainty reaches a predefined threshold, I demonstrate that the trade-off between data acquisition and classification accuracy can be significantly improved, leading to faster diagnostics.
 
 <img src="main_result_undersampling.png" alt="Undersampling" width='1080'/>
 
