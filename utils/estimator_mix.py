@@ -9,22 +9,66 @@ from scipy.interpolate import CubicSpline
 
 
 class LogisticRegressionMix():
+    """ 
+    A class that fits multiple Logistic Regression masking level-specific classifiers 
+    and supports interpolation of predictions based on mask levels.
+    """
+
     def __init__(self, C, mask_levels):
+        """ 
+        Initialize the LogisticRegressionMix class with the regularization 
+        parameter 'C' and mask levels.
+        """
         self.mask_levels = mask_levels
         self.C = C
         
     def fit(self, X, y):
+        """
+        Fit logistic regression models for each training sample.
+        
+        Parameters:
+        X : ndarray
+            The input features (3D array). First dimension refers to masking levels.
+        y : ndarray
+            The target labels (2D array). First dimension refers to masking levels.
+        """
         self.y = y
         self.mixclf = []
         for i in range(X.size(0)):
-            Xtrain = X[i,:,:].cpu()
-            ytrain = y[i,:].squeeze()
+            Xtrain = X[i,:,:].cpu() # Extract training data for each masking level
+            ytrain = y[i,:].squeeze() # Extract corresponding labels
+            
+            # Train a logistic regression model
             self.mixclf.append(LogisticRegression(C=self.C,random_state=0,max_iter=3000).fit(Xtrain, ytrain))
         return self
     
     def predict_proba(self, Xtest, mask_levels=None):
+        """
+        Predict probabilities using the fitted logistic regression models.
         
+        Parameters:
+        X_test : ndarray
+            The input features for testing.
+        mask_levels : list or ndarray, optional
+            Levels at which to interpolate the predictions (default is None).
+        
+        Returns:
+        ypred : ndarray
+            Predicted probabilities after interpolation.
+        """
         def direct_clf(X):
+            """
+            Directly predict probabilities for each instance assuming 
+            the standard masking levels.
+            
+            Parameters:
+            X : ndarray
+                Input features.
+            
+            Returns:
+            y : ndarray
+                Predicted probabilities for each sample.
+            """
             y = np.zeros((X.shape[0],X.shape[1]))
             for i, clf in enumerate(self.mixclf):
                 #print(clf)
@@ -32,7 +76,17 @@ class LogisticRegressionMix():
             return y
         
         def interp_clf(X):
-            # Assumes just one instance to predict
+            """
+            Predict probabilities for a single instance to interpolate later.
+            
+            Parameters:
+            X : ndarray
+                Input features for a single instance.
+            
+            Returns:
+            y : ndarray
+                Predicted probabilities for interpolation.
+            """
             if X.dim()<3:
                 X = X.unsqueeze(0)
             
@@ -44,22 +98,36 @@ class LogisticRegressionMix():
             return y
 
         def confidence_interpolate(y, level):
-            #print(self.mask_levels.shape,y.shape)
+            """
+            Interpolate predicted probabilities based on confidence level.
+            
+            Parameters:
+            y : ndarray
+                Predicted probabilities from different classifiers.
+            level : float
+                Mask level for interpolation.
+            
+            Returns:
+            float
+                Interpolated probability for the given mask level.
+            """
             cs = CubicSpline(self.mask_levels,y)
             return cs(level)
         
-        
+        # If no mask levels are provided, perform direct classification
         if mask_levels is None:
             ypred = direct_clf(Xtest)
         else:    
             yall = interp_clf(Xtest)
-            #print(np.array(mask_levels).shape)
             
+            # Ensure mask levels is a list or ndarray
             if not isinstance(mask_levels, (list, np.ndarray)):
                 mask_levels = [mask_levels]
             
+            # Array to hold interpolated predictions
             yinterp = np.zeros((len(mask_levels),yall.shape[1]))
             
+            # Interpolate predictions for each instance
             for i,level in enumerate(mask_levels):
                 for p in range(yall.shape[1]):
                     yinterp[i,p] = confidence_interpolate(yall[:,p],level)
