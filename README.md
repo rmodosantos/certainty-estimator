@@ -19,7 +19,7 @@ Although several methods have been proposed to deal with this issue, their imple
 
 ## Repository structure
 
-In this repository, I first train a neral network to classify tumors in a publicly available dataset. Then, I train and test certainty estimation approaches and finalize by showing a proof of concept for the application of certainty estimation in a real-world scenario. Detailed information on model implementations and on the dataset are incorporated in dedicated files and all steps are documented in jupyter notebooks, as follows:
+In this repository, I first train a neural network to classify tumors in a publicly available dataset. Then, I train and test certainty estimation approaches and finalize by showing a proof of concept for the application of certainty estimation in a real-world scenario. Detailed information on model implementations and on the dataset are incorporated in dedicated files and all steps are documented in jupyter notebooks, as follows:
 
 Information on models and dataset:
 - [model card](/Model_card.md)
